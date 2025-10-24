@@ -10,19 +10,16 @@ from flask import Flask, jsonify, request, send_from_directory
 
 app = Flask(__name__, static_folder='src', static_url_path='')
 
-# Almacenamiento en memoria
 dispositivos_registrados = []
 
 @app.route('/')
 def serve_index():
     return send_from_directory(app.static_folder, 'index.html')
 
-# Listar dispositivos
 @app.route('/api/dispositivos', methods=['GET'])
 def api_listar_dispositivos():
     return jsonify(dispositivos_registrados), 200
 
-# Agregar dispositivo (básico)
 @app.route('/api/dispositivos', methods=['POST'])
 def api_agregar_dispositivo():
     payload = request.get_json(silent=True) or {}
@@ -35,6 +32,16 @@ def api_agregar_dispositivo():
     }
     dispositivos_registrados.append(dispositivo)
     return jsonify({'mensaje': 'Dispositivo agregado', 'dispositivo': dispositivo}), 201
+
+# NUEVO: eliminar por SID
+@app.route('/api/dispositivos/<sid>', methods=['DELETE'])
+def api_eliminar_dispositivo(sid):
+    sid = sid.strip()
+    for i, d in enumerate(dispositivos_registrados):
+        if d['sid'] == sid:
+            dispositivos_registrados.pop(i)
+            return jsonify({'mensaje': f'Dispositivo {sid} eliminado'}), 200
+    return jsonify({'error': f'No se encontró el dispositivo con SID {sid}'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
